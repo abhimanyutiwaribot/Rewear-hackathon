@@ -1,4 +1,5 @@
 const Item = require('../models/Item');
+const User = require('../models/User');
 
 exports.getAllItems = async (req, res) => {
   try {
@@ -66,12 +67,24 @@ exports.addItem = async (req, res) => {
   }
 };
 
-exports.swapItem = async (req, res) => {
+// Get items uploaded by logged-in user
+exports.getUserItems = async (req, res) => {
   try {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ msg: 'Unauthorized' });
     }
 
+    const items = await Item.find({ owner: req.user._id }).populate('owner', 'name');
+    res.json(items);
+  } catch (error) {
+    console.error('Error fetching user items:', error);
+    res.status(500).json({ msg: 'Error fetching user items' });
+  }
+};
+
+// Swap item with another item
+exports.swapItem = async (req, res) => {
+  try {
     const item = await Item.findById(req.params.id);
     if (!item) {
       return res.status(404).json({ msg: 'Item not found' });
@@ -89,11 +102,6 @@ exports.swapItem = async (req, res) => {
     item.status = 'swapped';
     await item.save();
 
-    // Update user points (simplified - in real app you'd have more complex logic)
-    // const uploader = await User.findById(item.uploader);
-    // uploader.points += item.pointsValue;
-    // await uploader.save();
-
     res.json({ msg: 'Item swapped successfully', item });
   } catch (error) {
     console.error('Error swapping item:', error);
@@ -101,28 +109,9 @@ exports.swapItem = async (req, res) => {
   }
 };
 
-// Get items uploaded by logged-in user
-exports.getUserItems = async (req, res) => {
-  try {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ msg: 'Unauthorized' });
-    }
-
-    const items = await Item.find({ owner: req.user._id }).populate('owner', 'name');
-    res.json(items);
-  } catch (error) {
-    console.error('Error fetching user items:', error);
-    res.status(500).json({ msg: 'Error fetching user items' });
-  }
-};
-
 // Redeem item with points
 exports.redeemItem = async (req, res) => {
   try {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ msg: 'Unauthorized' });
-    }
-
     const item = await Item.findById(req.params.id);
     if (!item) {
       return res.status(404).json({ msg: 'Item not found' });
@@ -132,34 +121,22 @@ exports.redeemItem = async (req, res) => {
       return res.status(400).json({ msg: 'Item is not available for redemption' });
     }
 
-    if (item.uploader.toString() === req.user._id.toString()) {
-      return res.status(400).json({ msg: 'Cannot redeem your own item' });
-    }
-
-    if (req.user.points < item.pointsValue) {
+    const user = await User.findById(req.user._id);
+    if (user.points < item.pointsValue) {
       return res.status(400).json({ msg: 'Not enough points to redeem this item' });
     }
 
-    // Update item status
+    // Update item status and user points
     item.status = 'swapped';
-    await item.save();
+    user.points -= item.pointsValue;
 
-    // Update user points (deduct points from redeemer, add to owner)
-    const User = require('../models/User');
-    const redeemer = await User.findById(req.user._id);
-    const owner = await User.findById(item.owner);
+    await Promise.all([item.save(), user.save()]);
 
-    redeemer.points -= item.pointsValue;
-    owner.points += item.pointsValue;
-
-    await redeemer.save();
-    await owner.save();
-
-    res.json({ 
-      msg: 'Item redeemed successfully', 
+    res.json({
+      msg: 'Item redeemed successfully',
       item,
       pointsDeducted: item.pointsValue,
-      newBalance: redeemer.points
+      remainingPoints: user.points
     });
   } catch (error) {
     console.error('Error redeeming item:', error);

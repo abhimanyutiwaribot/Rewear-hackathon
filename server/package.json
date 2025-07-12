@@ -5,7 +5,9 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "dev:full": "concurrently \"npm run dev\" \"cd ../client && npm run dev\""
+    "dev:full": "concurrently \"npm run dev\" \"cd ../client && npm run dev\"",
+    "test": "jest --detectOpenHandles",
+    "test:watch": "jest --watch"
   },
   "dependencies": {
     "bcrypt": "^5.1.0",

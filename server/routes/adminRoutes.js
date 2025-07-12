@@ -8,4 +8,10 @@ router.put('/approve/:id', isAdmin, AdminController.approveItem);
 router.put('/reject/:id', isAdmin, AdminController.rejectItem);
 router.delete('/remove/:id', isAdmin, AdminController.removeItem);
 
+router.get('/users', isAdmin, AdminController.getAllUsers);
+router.put('/users/:id/ban', isAdmin, AdminController.toggleBanUser);
+
+router.get('/swaps', isAdmin, AdminController.getAllSwaps);
+router.get('/stats', isAdmin, AdminController.getStats);
+
 module.exports = router;

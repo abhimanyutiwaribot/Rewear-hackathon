@@ -9,7 +9,7 @@ const itemSchema = new mongoose.Schema({
   condition: { type: String, required: true },
   tags: [{ type: String }],
   images: [{ type: String }],
-  uploader: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  owner : { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   status: { 
     type: String, 
     enum: ['pending', 'approved', 'swapped'], 
