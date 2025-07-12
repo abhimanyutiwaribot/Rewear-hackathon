@@ -1,8 +1,8 @@
-const bcrypt = require('bcrypt');
-const passport = require('passport');
-const User = require('../models/User');
+import bcrypt from 'bcrypt';
+import passport from 'passport';
+import User from '../models/User.js';
 
-exports.register = async (req, res) => {
+export const register = async (req, res) => {
   const { name, email, password } = req.body;
   try {
     let user = await User.findOne({ email });
@@ -19,7 +19,7 @@ exports.register = async (req, res) => {
   }
 };
 
-exports.login = (req, res, next) => {
+export const login = (req, res, next) => {
   passport.authenticate('local', (err, user, info) => {
     if (err) return next(err);
     if (!user) return res.status(400).json({ msg: 'Invalid credentials' });
@@ -35,19 +35,19 @@ exports.login = (req, res, next) => {
           role: user.role,
           points: user.points 
         },
-        redirectTo: user.role === 'admin' ? '/admin' : '/dashboard'
+        redirectTo: '/' // Changed to redirect to landing page
       });
     });
   })(req, res, next);
 };
 
-exports.logout = (req, res) => {
+export const logout = (req, res) => {
   req.logout(() => {
     res.json({ msg: 'Logged out' });
   });
 };
 
-exports.getProfile = (req, res) => {
+export const getProfile = (req, res) => {
   if (!req.isAuthenticated()) return res.status(401).json({ msg: 'Not authenticated' });
   res.json(req.user);
 };

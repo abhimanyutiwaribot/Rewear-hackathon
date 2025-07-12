@@ -1,32 +1,47 @@
-import React, { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
+import { getUserProfile } from '../services/api';
 
 const UserContext = createContext();
 
 export function UserProvider({ children }) {
-  // Simulate a logged-in user (replace with real auth logic)
-  const [user, setUser] = useState({
-    name: 'Demo User',
-    email: 'demo@rewear.com',
-    points: 100,
-    listings: [], // { title, ... }
-    purchases: [] // { title, ... }
-  });
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const addListing = (item) => {
-    setUser((prev) => ({ ...prev, listings: [item, ...prev.listings] }));
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const userData = await getUserProfile();
+        setUser(userData);
+      } catch (err) {
+        console.error('Failed to fetch user:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchUser();
+  }, []);
+
+  const updateUser = (newUserData) => {
+    setUser(newUserData);
   };
 
-  const addPurchase = (item) => {
-    setUser((prev) => ({ ...prev, purchases: [item, ...prev.purchases] }));
+  const value = {
+    user,
+    updateUser,
+    loading
   };
 
   return (
-    <UserContext.Provider value={{ user, setUser, addListing, addPurchase }}>
+    <UserContext.Provider value={value}>
       {children}
     </UserContext.Provider>
   );
 }
 
-export function useUser() {
-  return useContext(UserContext);
-}
+export const useUser = () => {
+  const context = useContext(UserContext);
+  if (!context) {
+    throw new Error('useUser must be used within a UserProvider');
+  }
+  return context;
+};

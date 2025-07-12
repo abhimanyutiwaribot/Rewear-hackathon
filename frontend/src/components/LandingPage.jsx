@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useUser } from '../context/UserContext'
+import { logoutUser } from '../services/api'
 
 const featuredItems = [
   {
@@ -47,6 +49,7 @@ function LandingPage() {
   const [carouselVisible, setCarouselVisible] = useState(false)
   const [metricsVisible, setMetricsVisible] = useState(false)
   const navigate = useNavigate()
+  const { user, updateUser } = useUser();
 
   // Animate sections on mount
   useEffect(() => {
@@ -84,6 +87,16 @@ function LandingPage() {
 
   const item = featuredItems[carouselIdx]
 
+  const handleLogout = async () => {
+    try {
+      await logoutUser();
+      updateUser(null); // Clear user from context
+      navigate('/');
+    } catch (err) {
+      console.error('Logout failed:', err);
+    }
+  };
+
   return (
     <div style={{
       background: '#f8fafc',
@@ -106,20 +119,63 @@ function LandingPage() {
           <img src="https://img.icons8.com/color/48/000000/t-shirt--v2.png" alt="ReWear Logo" style={{ width: 38, height: 38 }} />
           <span style={{ fontWeight: 700, fontSize: '1.5rem', color: '#6366f1', letterSpacing: '0.03em' }}>ReWear</span>
         </div>
-        <div style={{ display: 'flex', gap: '1.5rem' }}>
+        <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
           <Link to="/" style={{ color: '#6366f1', fontWeight: 500, fontSize: '1.1rem', textDecoration: 'none' }}>Home</Link>
-          <Link to="/dashboard" style={{ color: '#6366f1', fontWeight: 500, fontSize: '1.1rem', textDecoration: 'none' }}>Browse</Link>
-          <Link to="/login" style={{ color: '#6366f1', fontWeight: 500, fontSize: '1.1rem', textDecoration: 'none' }}>Login</Link>
-          <Link to="/signup" style={{
-            color: '#fff',
-            background: '#6366f1',
-            borderRadius: 8,
-            padding: '0.4em 1.1em',
-            fontWeight: 600,
-            fontSize: '1.1rem',
-            textDecoration: 'none',
-            boxShadow: '0 2px 8px 0 rgba(60,60,120,0.08)'
-          }}>Sign Up</Link>
+          <Link to="/browse" style={{ color: '#6366f1', fontWeight: 500, fontSize: '1.1rem', textDecoration: 'none' }}>Browse</Link>
+          
+          {user ? (
+            <>
+              <Link to="/add-item" style={{ color: '#6366f1', fontWeight: 500, fontSize: '1.1rem', textDecoration: 'none' }}>Add Item</Link>
+              <Link to="/dashboard" style={{ color: '#6366f1', fontWeight: 500, fontSize: '1.1rem', textDecoration: 'none' }}>Dashboard</Link>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span style={{ color: '#475569' }}>{user.name}</span>
+                <img 
+                  src={user.avatar || "https://ui-avatars.com/api/?name=" + encodeURIComponent(user.name)}
+                  alt="Profile" 
+                  style={{ width: 35, height: 35, borderRadius: '50%', border: '2px solid #e0e7ff' }}
+                />
+                <button
+                  onClick={handleLogout}
+                  style={{
+                    marginLeft: '1rem',
+                    padding: '0.4em 1em',
+                    border: '1px solid #ef4444',
+                    borderRadius: '6px',
+                    backgroundColor: '#fff',
+                    color: '#ef4444',
+                    fontSize: '0.9rem',
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseOver={e => {
+                    e.target.style.backgroundColor = '#ef4444';
+                    e.target.style.color = '#fff';
+                  }}
+                  onMouseOut={e => {
+                    e.target.style.backgroundColor = '#fff';
+                    e.target.style.color = '#ef4444';
+                  }}
+                >
+                  Logout
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <Link to="/login" style={{ color: '#6366f1', fontWeight: 500, fontSize: '1.1rem', textDecoration: 'none' }}>Login</Link>
+              <Link to="/signup" style={{
+                color: '#fff',
+                background: '#6366f1',
+                borderRadius: 8,
+                padding: '0.4em 1.1em',
+                fontWeight: 600,
+                fontSize: '1.1rem',
+                textDecoration: 'none',
+                boxShadow: '0 2px 8px 0 rgba(60,60,120,0.08)'
+              }}>Sign Up</Link>
+            </>
+          )}
         </div>
       </nav>
 

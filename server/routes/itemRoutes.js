@@ -1,15 +1,16 @@
-const express = require('express');
+import express from 'express';
+import { getAllItems, getApprovedItems, getUserItems, getItemById, addItem, swapItem, redeemItem } from '../controllers/ItemController.js';
+import upload from '../middleware/upload.js';
+import { ensureAuthenticated } from '../middleware/auth.js';
+
 const router = express.Router();
-const ItemController = require('../controllers/ItemController');
-const upload = require('../middleware/upload');
-const { ensureAuthenticated } = require('../middleware/auth');
 
-router.get('/', ItemController.getAllItems);
-router.get('/approved', ItemController.getApprovedItems);
-router.get('/user', ensureAuthenticated, ItemController.getUserItems);
-router.get('/:id', ItemController.getItemById);
-router.post('/add', ensureAuthenticated, upload.array('images', 5), ItemController.addItem);
-router.put('/:id/swap', ensureAuthenticated, ItemController.swapItem);
-router.put('/:id/redeem', ensureAuthenticated, ItemController.redeemItem);
+router.get('/', getAllItems);
+router.get('/approved', getApprovedItems);
+router.get('/user', ensureAuthenticated, getUserItems);
+router.get('/:id', getItemById);
+router.post('/add', ensureAuthenticated, upload.array('images', 5), addItem);
+router.put('/:id/swap', ensureAuthenticated, swapItem);
+router.put('/:id/redeem', ensureAuthenticated, redeemItem);
 
-module.exports = router;
+export default router;

@@ -1,13 +1,40 @@
-
-
-import { useState } from 'react';
-import { useUser } from '../context/UserContext';
+import { useState, useEffect } from 'react';
+import { getUserProfile, getUserItems } from '../services/api';
 
 function Dashboard() {
-  const { user } = useUser();
+  const [userData, setUserData] = useState(null);
+  const [userItems, setUserItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const [profile, items] = await Promise.all([
+          getUserProfile(),
+          getUserItems()
+        ]);
+        setUserData(profile);
+        setUserItems(items);
+      } catch (err) {
+        setError('Failed to load user data');
+        console.error('Dashboard error:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, []);
+
   const handleListingClick = (item) => setSelectedItem(item);
   const closeModal = () => setSelectedItem(null);
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>{error}</div>;
+  if (!userData) return <div>No user data found</div>;
+
   return (
     <div style={{
       background: '#f8fafc',
@@ -36,6 +63,7 @@ function Dashboard() {
           marginBottom: '2rem',
           justifyContent: 'space-between'
         }}>
+          {/* Profile Section */}
           <div style={{
             flex: 1,
             minWidth: 220,
@@ -45,10 +73,12 @@ function Dashboard() {
             boxShadow: '0 2px 8px 0 rgba(60,60,120,0.04)'
           }}>
             <h3 style={{ color: '#3730a3', margin: 0, fontSize: '1.1rem' }}>Profile Details</h3>
-            <p style={{ color: '#475569', margin: '0.7em 0 0 0' }}>Name: <b>{user.name}</b></p>
-            <p style={{ color: '#475569', margin: 0 }}>Points Balance: <b>{user.points}</b></p>
-            <p style={{ color: '#475569', margin: 0 }}>Email: <b>{user.email}</b></p>
+            <p style={{ color: '#475569', margin: '0.7em 0 0 0' }}>Name: <b>{userData.name}</b></p>
+            <p style={{ color: '#475569', margin: 0 }}>Points Balance: <b>{userData.points}</b></p>
+            <p style={{ color: '#475569', margin: 0 }}>Email: <b>{userData.email}</b></p>
           </div>
+
+          {/* Listings Section */}
           <div style={{
             flex: 1,
             minWidth: 220,
@@ -58,22 +88,27 @@ function Dashboard() {
             boxShadow: '0 2px 8px 0 rgba(60,60,120,0.04)'
           }}>
             <h3 style={{ color: '#3730a3', margin: 0, fontSize: '1.1rem' }}>My Listings</h3>
-            {user.listings.length === 0 ? (
+            {userItems.length === 0 ? (
               <p style={{ color: '#64748b', margin: '0.7em 0 0 0' }}>No items listed yet.</p>
             ) : (
               <ul style={{ color: '#475569', margin: '0.7em 0 0 1em', padding: 0 }}>
-                {user.listings.map((item, idx) => (
-                  <li key={idx} style={{ marginBottom: '0.7em', cursor: 'pointer' }} onClick={() => handleListingClick(item)}>
+                {userItems.map((item) => (
+                  <li key={item._id} style={{ marginBottom: '0.7em', cursor: 'pointer' }} onClick={() => handleListingClick(item)}>
                     <b>{item.title}</b>
                     {item.images && item.images.length > 0 && (
                       <div style={{ marginTop: 4 }}>
-                        <img src={item.images[0]} alt={item.title} style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, border: '1px solid #e0e7ff' }} />
+                        <img 
+                          src={`${process.env.REACT_APP_API_URL}${item.images[0]}`} 
+                          alt={item.title} 
+                          style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8 }} 
+                        />
                       </div>
                     )}
                   </li>
                 ))}
               </ul>
             )}
+            
             {/* Modal for item details */}
             {selectedItem && (
               <div style={{
@@ -112,7 +147,7 @@ function Dashboard() {
                   {selectedItem.images && selectedItem.images.length > 0 && (
                     <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
                       {selectedItem.images.map((src, idx) => (
-                        <img key={idx} src={src} alt={selectedItem.title} style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, border: '1px solid #e0e7ff' }} />
+                        <img key={idx} src={src} alt={selectedItem.title} style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8 }} />
                       ))}
                     </div>
                   )}
@@ -129,6 +164,8 @@ function Dashboard() {
             )}
           </div>
         </div>
+
+        {/* Purchases Section - Update to use real data */}
         <div style={{
           display: 'flex',
           flexWrap: 'wrap',
@@ -144,21 +181,25 @@ function Dashboard() {
             boxShadow: '0 2px 8px 0 rgba(60,60,120,0.04)'
           }}>
             <h3 style={{ color: '#3730a3', margin: 0, fontSize: '1.1rem' }}>My Purchases</h3>
-            {user.purchases.length === 0 ? (
-              <p style={{ color: '#64748b', margin: '0.7em 0 0 0' }}>No purchases yet.</p>
-            ) : (
+            {userData.purchases && userData.purchases.length > 0 ? (
               <ul style={{ color: '#475569', margin: '0.7em 0 0 1em', padding: 0 }}>
-                {user.purchases.map((item, idx) => (
-                  <li key={idx} style={{ marginBottom: '0.7em' }}>
+                {userData.purchases.map((item) => (
+                  <li key={item._id} style={{ marginBottom: '0.7em' }}>
                     <b>{item.title}</b>
                     {item.images && item.images.length > 0 && (
                       <div style={{ marginTop: 4 }}>
-                        <img src={item.images[0]} alt={item.title} style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, border: '1px solid #e0e7ff' }} />
+                        <img 
+                          src={`${process.env.REACT_APP_API_URL}${item.images[0]}`} 
+                          alt={item.title} 
+                          style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8 }} 
+                        />
                       </div>
                     )}
                   </li>
                 ))}
               </ul>
+            ) : (
+              <p style={{ color: '#64748b', margin: '0.7em 0 0 0' }}>No purchases yet.</p>
             )}
           </div>
         </div>
@@ -167,4 +208,4 @@ function Dashboard() {
   );
 }
 
-export default Dashboard
+export default Dashboard;

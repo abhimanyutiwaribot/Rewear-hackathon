@@ -1,8 +1,19 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { loginUser, registerUser } from '../services/api'
+import { useUser } from '../context/UserContext';
 
 function AuthPage() {
   const [mode, setMode] = useState('login')
   const [fade, setFade] = useState(true)
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    name: ''
+  });
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
+  const { updateUser } = useUser();
 
   const switchMode = (newMode) => {
     setFade(false)
@@ -11,6 +22,52 @@ function AuthPage() {
       setFade(true)
     }, 200)
   }
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    
+    try {
+      if (mode === 'signup') {
+        const response = await registerUser(formData);
+        if (response.msg === 'Registered successfully') {
+          // After successful registration, log them in
+          const loginResponse = await loginUser({
+            email: formData.email,
+            password: formData.password
+          });
+          if (loginResponse.user) {
+            updateUser(loginResponse.user);
+            navigate('/'); // Always redirect to landing page
+          }
+        } else {
+          setError(response.msg);
+        }
+      } else {
+        // Handle login
+        const response = await loginUser({
+          email: formData.email,
+          password: formData.password
+        });
+        if (response.user) {
+          updateUser(response.user);
+          navigate('/'); // Always redirect to landing page
+        } else {
+          setError(response.msg);
+        }
+      }
+    } catch (err) {
+      setError('Failed to connect to server');
+    }
+  };
 
   return (
     <div style={{
@@ -85,12 +142,42 @@ function AuthPage() {
           opacity: fade ? 1 : 0,
           transition: 'opacity 0.2s'
         }}>
-          <form>
+          <form onSubmit={handleSubmit}>
+            {error && <div style={{ color: 'red', marginBottom: '1rem' }}>{error}</div>}
             {mode === 'signup' && (
               <div style={{ marginBottom: '1.2rem' }}>
                 <label style={{ color: '#475569', fontWeight: 500 }}>
                   Name:
-                  <input type="text" style={{
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    style={{
+                      display: 'block',
+                      width: '100%',
+                      marginTop: '0.5em',
+                      padding: '0.5em',
+                      borderRadius: '8px',
+                      border: '1.5px solid #e0e7ff',
+                      background: 'rgba(255,255,255,0.7)',
+                      fontSize: '1rem',
+                      outline: 'none'
+                    }}
+                    required
+                  />
+                </label>
+              </div>
+            )}
+            <div style={{ marginBottom: '1.2rem' }}>
+              <label style={{ color: '#475569', fontWeight: 500 }}>
+                Email:
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  style={{
                     display: 'block',
                     width: '100%',
                     marginTop: '0.5em',
@@ -100,40 +187,32 @@ function AuthPage() {
                     background: 'rgba(255,255,255,0.7)',
                     fontSize: '1rem',
                     outline: 'none'
-                  }} />
-                </label>
-              </div>
-            )}
-            <div style={{ marginBottom: '1.2rem' }}>
-              <label style={{ color: '#475569', fontWeight: 500 }}>
-                Email:
-                <input type="email" style={{
-                  display: 'block',
-                  width: '100%',
-                  marginTop: '0.5em',
-                  padding: '0.5em',
-                  borderRadius: '8px',
-                  border: '1.5px solid #e0e7ff',
-                  background: 'rgba(255,255,255,0.7)',
-                  fontSize: '1rem',
-                  outline: 'none'
-                }} />
+                  }}
+                  required
+                />
               </label>
             </div>
             <div style={{ marginBottom: '1.2rem' }}>
               <label style={{ color: '#475569', fontWeight: 500 }}>
                 Password:
-                <input type="password" style={{
-                  display: 'block',
-                  width: '100%',
-                  marginTop: '0.5em',
-                  padding: '0.5em',
-                  borderRadius: '8px',
-                  border: '1.5px solid #e0e7ff',
-                  background: 'rgba(255,255,255,0.7)',
-                  fontSize: '1rem',
-                  outline: 'none'
-                }} />
+                <input
+                  type="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  style={{
+                    display: 'block',
+                    width: '100%',
+                    marginTop: '0.5em',
+                    padding: '0.5em',
+                    borderRadius: '8px',
+                    border: '1.5px solid #e0e7ff',
+                    background: 'rgba(255,255,255,0.7)',
+                    fontSize: '1rem',
+                    outline: 'none'
+                  }}
+                  required
+                />
               </label>
             </div>
             <button type="submit" style={{

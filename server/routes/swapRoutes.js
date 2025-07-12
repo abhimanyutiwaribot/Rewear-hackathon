@@ -1,11 +1,12 @@
-const express = require('express');
+import express from 'express';
+import { createSwap, updateSwapStatus, deleteSwap, getUserSwaps } from '../controllers/SwapController.js';
+import { isAuthenticated } from '../middleware/auth.js';
+
 const router = express.Router();
-const SwapController = require('../controllers/SwapController');
-const { isAuthenticated } = require('../middleware/auth');
 
-router.post('/', isAuthenticated, SwapController.createSwap);               // Request swap
-router.put('/:id/status', isAuthenticated, SwapController.updateSwapStatus); // Accept/Reject/Complete
-router.delete('/:id', isAuthenticated, SwapController.deleteSwap);          // Cancel request
-router.get('/user/:id', isAuthenticated, SwapController.getUserSwaps);      // View swaps of a user
+router.post('/', isAuthenticated, createSwap);               // Request swap
+router.put('/:id/status', isAuthenticated, updateSwapStatus); // Accept/Reject/Complete
+router.delete('/:id', isAuthenticated, deleteSwap);          // Cancel request
+router.get('/user/:id', isAuthenticated, getUserSwaps);      // View swaps of a user
 
-module.exports = router;
+export default router;

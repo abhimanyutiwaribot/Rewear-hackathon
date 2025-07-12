@@ -1,7 +1,7 @@
-const Item = require('../models/Item');
-const User = require('../models/User');
+import Item from '../models/Item.js';
+import User from '../models/User.js';
 
-exports.getAllItems = async (req, res) => {
+export const getAllItems = async (req, res) => {
   try {
     const items = await Item.find().populate('owner', 'name');
     res.json(items);
@@ -11,7 +11,7 @@ exports.getAllItems = async (req, res) => {
 };
 
 // Get only approved items for landing page
-exports.getApprovedItems = async (req, res) => {
+export const getApprovedItems = async (req, res) => {
   try {
     const items = await Item.find({ status: 'approved' }).populate('owner', 'name');
     res.json(items);
@@ -20,7 +20,7 @@ exports.getApprovedItems = async (req, res) => {
   }
 };
 
-exports.getItemById = async (req, res) => {
+export const getItemById = async (req, res) => {
   try {
     const item = await Item.findById(req.params.id).populate('owner', 'name');
     if (!item) {
@@ -32,16 +32,20 @@ exports.getItemById = async (req, res) => {
   }
 };
 
-exports.addItem = async (req, res) => {
+export const addItem = async (req, res) => {
   try {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ msg: 'Unauthorized' });
     }
 
+    // Log the request body and files for debugging
+    console.log('Request body:', req.body);
+    console.log('Files:', req.files);
+
     const { title, description, category, type, size, condition, tags } = req.body;
     
     // Handle tags - convert string to array if needed
-    const tagsArray = tags ? tags.split(',').map(tag => tag.trim()) : [];
+    const tagsArray = typeof tags === 'string' ? tags.split(',').map(tag => tag.trim()) : [];
     
     // Handle uploaded images
     const images = req.files ? req.files.map(file => `/uploads/${file.filename}`) : [];
@@ -56,19 +60,19 @@ exports.addItem = async (req, res) => {
       tags: tagsArray,
       images,
       owner: req.user._id,
-      status: 'pending' // Default status - needs admin approval
+      status: 'pending'
     });
 
-    await item.save();
-    res.json({ msg: 'Item added successfully and pending approval', item });
+    const savedItem = await item.save();
+    res.status(201).json({ msg: 'Item added successfully', item: savedItem });
   } catch (error) {
-    console.error('Error adding item:', error);
-    res.status(500).json({ msg: 'Error adding item' });
+    console.error('Server error in addItem:', error);
+    res.status(500).json({ msg: 'Error adding item', error: error.message });
   }
 };
 
 // Get items uploaded by logged-in user
-exports.getUserItems = async (req, res) => {
+export const getUserItems = async (req, res) => {
   try {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ msg: 'Unauthorized' });
@@ -83,7 +87,7 @@ exports.getUserItems = async (req, res) => {
 };
 
 // Swap item with another item
-exports.swapItem = async (req, res) => {
+export const swapItem = async (req, res) => {
   try {
     const item = await Item.findById(req.params.id);
     if (!item) {
@@ -110,7 +114,7 @@ exports.swapItem = async (req, res) => {
 };
 
 // Redeem item with points
-exports.redeemItem = async (req, res) => {
+export const redeemItem = async (req, res) => {
   try {
     const item = await Item.findById(req.params.id);
     if (!item) {

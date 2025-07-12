@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useUser } from '../context/UserContext';
 import { useNavigate } from 'react-router-dom';
+import { addNewItem } from '../services/api';
 
 function AddItem() {
   const [images, setImages] = useState([]);
@@ -28,16 +29,23 @@ function AddItem() {
     setImagePreviews(files.map(file => URL.createObjectURL(file)));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // For now, just log the data. Replace with API call as needed.
-    const data = new FormData();
-    images.forEach((img, idx) => data.append('images', img));
-    Object.entries(form).forEach(([key, value]) => data.append(key, value));
-    const newItem = { ...form, images: imagePreviews };
-    addListing(newItem);
-    // Redirect to dashboard after submit
-    navigate('/dashboard');
+    const formData = new FormData();
+    images.forEach(img => formData.append('images', img));
+    Object.entries(form).forEach(([key, value]) => formData.append(key, value));
+
+    try {
+      const response = await addNewItem(formData);
+      if (response.item) {
+        navigate('/dashboard');
+      } else {
+        // Handle error
+        console.error(response.msg);
+      }
+    } catch (err) {
+      console.error('Error adding item:', err);
+    }
   };
 
   return (

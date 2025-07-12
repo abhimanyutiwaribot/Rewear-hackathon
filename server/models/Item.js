@@ -1,23 +1,20 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const itemSchema = new mongoose.Schema({
   title: { type: String, required: true },
   description: { type: String, required: true },
   category: { type: String, required: true },
-  type: { type: String, required: true }, // Added type field
+  type: { type: String, required: true },
   size: { type: String, required: true },
   condition: { type: String, required: true },
-  tags: [{ type: String }],
-  images: [{ type: String }],
-  owner : { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  status: { 
-    type: String, 
-    enum: ['pending', 'approved', 'swapped'], 
-    default: 'pending' 
-  },
-  pointsValue: { type: Number, default: 10, min: 1 }
+  tags: [String],
+  images: [String],
+  owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  status: { type: String, enum: ['pending', 'approved', 'swapped'], default: 'pending' },
+  pointsValue: { type: Number, default: 100 }
 }, {
   timestamps: true
 });
 
-module.exports = mongoose.model('Item', itemSchema);
+export default mongoose.model('Item', itemSchema);
+

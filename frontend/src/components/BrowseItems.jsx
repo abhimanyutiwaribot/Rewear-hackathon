@@ -1,46 +1,46 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { getAllItems, createSwapRequest } from '../services/api';
 
-// Dummy data for items
-const DUMMY_ITEMS = [
-  {
-    id: 1,
-    image: 'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=400&q=80',
-    title: 'Vintage Denim Jacket',
-    brand: 'Levi’s',
-    size: 'M',
-    condition: 'Like New',
-    points: 120,
-    tags: ['denim', 'jacket', 'vintage'],
-    available: true,
-    featured: true,
-  },
-  {
-    id: 2,
-    image: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80',
-    title: 'Floral Summer Dress',
-    brand: 'Zara',
-    size: 'S',
-    condition: 'Brand New',
-    points: 150,
-    tags: ['dress', 'floral', 'summer'],
-    available: false,
-    featured: false,
-  },
-  {
-    id: 3,
-    image: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=400&q=80',
-    title: 'Cozy Knit Sweater',
-    brand: 'H&M',
-    size: 'L',
-    condition: 'Gently Used',
-    points: 80,
-    tags: ['sweater', 'knit', 'cozy'],
-    available: true,
-    featured: false,
-  },
-  // ...add more items as needed
-];
+// const DUMMY_ITEMS = [
+//   {
+//     id: 1,
+//     image: 'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=400&q=80',
+//     title: 'Vintage Denim Jacket',
+//     brand: 'Levi’s',
+//     size: 'M',
+//     condition: 'Like New',
+//     points: 120,
+//     tags: ['denim', 'jacket', 'vintage'],
+//     available: true,
+//     featured: true,
+//   },
+//   {
+//     id: 2,
+//     image: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80',
+//     title: 'Floral Summer Dress',
+//     brand: 'Zara',
+//     size: 'S',
+//     condition: 'Brand New',
+//     points: 150,
+//     tags: ['dress', 'floral', 'summer'],
+//     available: false,
+//     featured: false,
+//   },
+//   {
+//     id: 3,
+//     image: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=400&q=80',
+//     title: 'Cozy Knit Sweater',
+//     brand: 'H&M',
+//     size: 'L',
+//     condition: 'Gently Used',
+//     points: 80,
+//     tags: ['sweater', 'knit', 'cozy'],
+//     available: true,
+//     featured: false,
+//   },
+//   // ...add more items as needed
+// ];
 
 const CATEGORIES = ['Tops', 'Bottoms', 'Footwear', 'Outerwear'];
 const BRANDS = ['Zara', 'H&M', 'Nike', 'Levi’s', 'Others'];
@@ -62,7 +62,32 @@ function BrowseItems() {
   });
   const [sort, setSort] = useState('newest');
   const [page, setPage] = useState(1);
-  const [items] = useState(DUMMY_ITEMS);
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchItems = async () => {
+      try {
+        const data = await getAllItems();
+        setItems(data);
+      } catch (err) {
+        setError('Failed to fetch items');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchItems();
+  }, []);
+
+  const handleSwapRequest = async (itemId) => {
+    try {
+      await createSwapRequest({ itemId, type: 'swap' });
+      // Handle success (maybe show a notification)
+    } catch (err) {
+      // Handle error
+    }
+  };
 
   // Filter and search logic
   const filteredItems = items.filter(item => {
@@ -163,7 +188,11 @@ function BrowseItems() {
         {/* Amazon-style Product Grid */}
         <div className="mt-6 w-full flex justify-center items-center pb-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 w-full max-w-6xl px-2 md:px-0">
-            {pagedItems.length === 0 ? (
+            {loading ? (
+              <div>Loading...</div>
+            ) : error ? (
+              <div>{error}</div>
+            ) : pagedItems.length === 0 ? (
               <div className="text-center text-gray-400 py-12 w-full col-span-full">No items found.</div>
             ) : (
               pagedItems.map(item => (
