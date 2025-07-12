@@ -176,7 +176,7 @@ function LandingPage() {
               className="rw-cta-animate"
             >Start Swapping</button>
           </Link>
-          <Link to="/dashboard">
+          <Link to="/browse">
             <button style={{
               background: '#fff',
               color: '#6366f1',
@@ -191,6 +191,22 @@ function LandingPage() {
             }}
               className="rw-cta-animate"
             >Browse Items</button>
+          </Link>
+          <Link to="/add-item">
+            <button style={{
+              background: '#22c55e',
+              color: '#fff',
+              border: '2px solid #22c55e',
+              borderRadius: '8px',
+              padding: '0.9em 2em',
+              fontSize: '1.15rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              boxShadow: '0 2px 8px 0 rgba(60,60,120,0.10)',
+              transition: 'transform 0.2s, box-shadow 0.2s'
+            }}
+              className="rw-cta-animate"
+            >Add New Item</button>
           </Link>
         </div>
       </header>
