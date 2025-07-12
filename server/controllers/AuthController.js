@@ -26,7 +26,17 @@ exports.login = (req, res, next) => {
 
     req.logIn(user, err => {
       if (err) return next(err);
-      res.json({ msg: 'Logged in', user: { id: user.id, name: user.name, email: user.email } });
+      res.json({ 
+        msg: 'Logged in', 
+        user: { 
+          id: user.id, 
+          name: user.name, 
+          email: user.email, 
+          role: user.role,
+          points: user.points 
+        },
+        redirectTo: user.role === 'admin' ? '/admin' : '/dashboard'
+      });
     });
   })(req, res, next);
 };
