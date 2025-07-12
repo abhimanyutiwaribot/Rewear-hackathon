@@ -5,9 +5,13 @@ import BrowseItems from './components/BrowseItems';
 import Dashboard from './components/Dashboard';
 import ItemDetail from './components/ItemDetail';
 import AddItem from './components/AddItem';
-import AdminPanel from './components/AdminPanel';
 import AuthPage from './components/AuthPage';
+import AdminDashboard from './pages/Admin/AdminDashboard'
+import PendingItems from './pages/Admin/PendingItems'
 import { UserProvider } from './context/UserContext';
+import Users from './pages/Admin/Users'
+import Swaps from './pages/Admin/Swaps'
+
 import './App.css';
 
 function App() {
@@ -20,9 +24,14 @@ function App() {
           <Route path="/browse" element={<BrowseItems />} />
           <Route path="/item/:id" element={<ItemDetail />} />
           <Route path="/add-item" element={<AddItem />} />
-          <Route path="/admin" element={<AdminPanel />} />
           <Route path="/login" element={<AuthPage />} />
           <Route path="/signup" element={<AuthPage />} />
+
+        <Route path="/admin" element={<AdminDashboard />}>
+          <Route path="pending-items" element={<PendingItems />} />
+          <Route path="users" element={<Users />} />
+          <Route path="swaps" element={<Swaps />} />
+        </Route>
         </Routes>
       </Router>
     </UserProvider>
