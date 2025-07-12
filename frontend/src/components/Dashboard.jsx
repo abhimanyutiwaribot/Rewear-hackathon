@@ -1,4 +1,13 @@
+
+
+import { useState } from 'react';
+import { useUser } from '../context/UserContext';
+
 function Dashboard() {
+  const { user } = useUser();
+  const [selectedItem, setSelectedItem] = useState(null);
+  const handleListingClick = (item) => setSelectedItem(item);
+  const closeModal = () => setSelectedItem(null);
   return (
     <div style={{
       background: '#f8fafc',
@@ -36,8 +45,9 @@ function Dashboard() {
             boxShadow: '0 2px 8px 0 rgba(60,60,120,0.04)'
           }}>
             <h3 style={{ color: '#3730a3', margin: 0, fontSize: '1.1rem' }}>Profile Details</h3>
-            <p style={{ color: '#475569', margin: '0.7em 0 0 0' }}>Name: <b>[User Name]</b></p>
-            <p style={{ color: '#475569', margin: 0 }}>Points Balance: <b>[Points]</b></p>
+            <p style={{ color: '#475569', margin: '0.7em 0 0 0' }}>Name: <b>{user.name}</b></p>
+            <p style={{ color: '#475569', margin: 0 }}>Points Balance: <b>{user.points}</b></p>
+            <p style={{ color: '#475569', margin: 0 }}>Email: <b>{user.email}</b></p>
           </div>
           <div style={{
             flex: 1,
@@ -47,11 +57,76 @@ function Dashboard() {
             padding: '1.2rem',
             boxShadow: '0 2px 8px 0 rgba(60,60,120,0.04)'
           }}>
-            <h3 style={{ color: '#3730a3', margin: 0, fontSize: '1.1rem' }}>Uploaded Items</h3>
-            <ul style={{ color: '#475569', margin: '0.7em 0 0 1em', padding: 0 }}>
-              <li>Item 1</li>
-              <li>Item 2</li>
-            </ul>
+            <h3 style={{ color: '#3730a3', margin: 0, fontSize: '1.1rem' }}>My Listings</h3>
+            {user.listings.length === 0 ? (
+              <p style={{ color: '#64748b', margin: '0.7em 0 0 0' }}>No items listed yet.</p>
+            ) : (
+              <ul style={{ color: '#475569', margin: '0.7em 0 0 1em', padding: 0 }}>
+                {user.listings.map((item, idx) => (
+                  <li key={idx} style={{ marginBottom: '0.7em', cursor: 'pointer' }} onClick={() => handleListingClick(item)}>
+                    <b>{item.title}</b>
+                    {item.images && item.images.length > 0 && (
+                      <div style={{ marginTop: 4 }}>
+                        <img src={item.images[0]} alt={item.title} style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, border: '1px solid #e0e7ff' }} />
+                      </div>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+            {/* Modal for item details */}
+            {selectedItem && (
+              <div style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                width: '100vw',
+                height: '100vh',
+                background: 'rgba(0,0,0,0.25)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 1000
+              }} onClick={closeModal}>
+                <div style={{
+                  background: '#fff',
+                  borderRadius: '1.2rem',
+                  padding: '2rem 2.2rem',
+                  minWidth: 320,
+                  maxWidth: 400,
+                  boxShadow: '0 2px 16px 0 rgba(60,60,120,0.13)',
+                  position: 'relative'
+                }} onClick={e => e.stopPropagation()}>
+                  <button onClick={closeModal} style={{
+                    position: 'absolute',
+                    top: 12,
+                    right: 16,
+                    background: 'none',
+                    border: 'none',
+                    fontSize: 22,
+                    color: '#6366f1',
+                    cursor: 'pointer',
+                    fontWeight: 700
+                  }}>&times;</button>
+                  <h2 style={{ color: '#6366f1', marginBottom: 12 }}>{selectedItem.title}</h2>
+                  {selectedItem.images && selectedItem.images.length > 0 && (
+                    <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+                      {selectedItem.images.map((src, idx) => (
+                        <img key={idx} src={src} alt={selectedItem.title} style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, border: '1px solid #e0e7ff' }} />
+                      ))}
+                    </div>
+                  )}
+                  <div style={{ color: '#475569', fontSize: 15 }}>
+                    <p><b>Description:</b> {selectedItem.description}</p>
+                    <p><b>Category:</b> {selectedItem.category}</p>
+                    <p><b>Brand:</b> {selectedItem.type}</p>
+                    <p><b>Size:</b> {selectedItem.size}</p>
+                    <p><b>Condition:</b> {selectedItem.condition}</p>
+                    <p><b>Tags:</b> {selectedItem.tags}</p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
         <div style={{
@@ -68,28 +143,28 @@ function Dashboard() {
             padding: '1.2rem',
             boxShadow: '0 2px 8px 0 rgba(60,60,120,0.04)'
           }}>
-            <h3 style={{ color: '#3730a3', margin: 0, fontSize: '1.1rem' }}>Ongoing Swaps</h3>
-            <ul style={{ color: '#475569', margin: '0.7em 0 0 1em', padding: 0 }}>
-              <li>Swap 1</li>
-            </ul>
-          </div>
-          <div style={{
-            flex: 1,
-            minWidth: 220,
-            background: '#f1f5fd',
-            borderRadius: '1rem',
-            padding: '1.2rem',
-            boxShadow: '0 2px 8px 0 rgba(60,60,120,0.04)'
-          }}>
-            <h3 style={{ color: '#3730a3', margin: 0, fontSize: '1.1rem' }}>Completed Swaps</h3>
-            <ul style={{ color: '#475569', margin: '0.7em 0 0 1em', padding: 0 }}>
-              <li>Swap 2</li>
-            </ul>
+            <h3 style={{ color: '#3730a3', margin: 0, fontSize: '1.1rem' }}>My Purchases</h3>
+            {user.purchases.length === 0 ? (
+              <p style={{ color: '#64748b', margin: '0.7em 0 0 0' }}>No purchases yet.</p>
+            ) : (
+              <ul style={{ color: '#475569', margin: '0.7em 0 0 1em', padding: 0 }}>
+                {user.purchases.map((item, idx) => (
+                  <li key={idx} style={{ marginBottom: '0.7em' }}>
+                    <b>{item.title}</b>
+                    {item.images && item.images.length > 0 && (
+                      <div style={{ marginTop: 4 }}>
+                        <img src={item.images[0]} alt={item.title} style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, border: '1px solid #e0e7ff' }} />
+                      </div>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 export default Dashboard
