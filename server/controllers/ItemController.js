@@ -2,16 +2,26 @@ const Item = require('../models/Item');
 
 exports.getAllItems = async (req, res) => {
   try {
-    const items = await Item.find().populate('uploader', 'name');
+    const items = await Item.find().populate('owner', 'name');
     res.json(items);
   } catch (error) {
     res.status(500).json({ msg: 'Error fetching items' });
   }
 };
 
+// Get only approved items for landing page
+exports.getApprovedItems = async (req, res) => {
+  try {
+    const items = await Item.find({ status: 'approved' }).populate('owner', 'name');
+    res.json(items);
+  } catch (error) {
+    res.status(500).json({ msg: 'Error fetching approved items' });
+  }
+};
+
 exports.getItemById = async (req, res) => {
   try {
-    const item = await Item.findById(req.params.id).populate('uploader', 'name');
+    const item = await Item.findById(req.params.id).populate('owner', 'name');
     if (!item) {
       return res.status(404).json({ msg: 'Item not found' });
     }
@@ -44,7 +54,7 @@ exports.addItem = async (req, res) => {
       condition,
       tags: tagsArray,
       images,
-      uploader: req.user._id,
+      owner: req.user._id,
       status: 'pending' // Default status - needs admin approval
     });
 
@@ -71,7 +81,7 @@ exports.swapItem = async (req, res) => {
       return res.status(400).json({ msg: 'Item is not available for swapping' });
     }
 
-    if (item.uploader.toString() === req.user._id.toString()) {
+    if (item.owner.toString() === req.user._id.toString()) {
       return res.status(400).json({ msg: 'Cannot swap your own item' });
     }
 
@@ -98,7 +108,7 @@ exports.getUserItems = async (req, res) => {
       return res.status(401).json({ msg: 'Unauthorized' });
     }
 
-    const items = await Item.find({ uploader: req.user._id }).populate('uploader', 'name');
+    const items = await Item.find({ owner: req.user._id }).populate('owner', 'name');
     res.json(items);
   } catch (error) {
     console.error('Error fetching user items:', error);
@@ -134,16 +144,16 @@ exports.redeemItem = async (req, res) => {
     item.status = 'swapped';
     await item.save();
 
-    // Update user points (deduct points from redeemer, add to uploader)
+    // Update user points (deduct points from redeemer, add to owner)
     const User = require('../models/User');
     const redeemer = await User.findById(req.user._id);
-    const uploader = await User.findById(item.uploader);
+    const owner = await User.findById(item.owner);
 
     redeemer.points -= item.pointsValue;
-    uploader.points += item.pointsValue;
+    owner.points += item.pointsValue;
 
     await redeemer.save();
-    await uploader.save();
+    await owner.save();
 
     res.json({ 
       msg: 'Item redeemed successfully', 
